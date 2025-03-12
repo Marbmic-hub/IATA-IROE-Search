@@ -5,16 +5,278 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IATA Rates of Exchange (IROE) Search</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
-    <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+    <!-- Fix the React script references -->
+    <script crossorigin src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-    <script src="https://unpkg.com/lucide-react@0.292.0/dist/umd/lucide-react.production.min.js"></script>
+    <script src="https://unpkg.com/lucide-react@0.292.0/dist/umd/lucide-react.min.js"></script>
 </head>
 <body class="bg-gray-100">
     <div id="root" class="container mx-auto p-4"></div>
     
-    <script src="js/data.js" type="text/babel"></script>
-    <script src="js/App.js" type="text/babel"></script>
-    <script src="js/index.js" type="text/babel"></script>
+    <!-- Directly add your JavaScript code here for simplicity -->
+    <script type="text/babel">
+        // Data from data.js
+        const iroeData = [
+          {
+            country: "Afghanistan",
+            currencyName: "US Dollar",
+            alphaCode: "USD",
+            numericCode: "840",
+            roeFromNUC: "1.000000",
+            roundingUnitsLocalCurrFares: "1",
+            roundingUnitsOtherCharges: "0.1",
+            decimalUnits: "2",
+            notes: "5",
+            localCurrencyLimited: false
+          },
+          {
+            country: "Afghanistan",
+            currencyName: "Afghani",
+            alphaCode: "AFN",
+            numericCode: "971",
+            roeFromNUC: "49.500000",
+            roundingUnitsLocalCurrFares: "1",
+            roundingUnitsOtherCharges: "1",
+            decimalUnits: "0",
+            notes: "2, 8",
+            localCurrencyLimited: true
+          },
+          {
+            country: "India",
+            currencyName: "US Dollar",
+            alphaCode: "USD",
+            numericCode: "840",
+            roeFromNUC: "1.000000",
+            roundingUnitsLocalCurrFares: "1",
+            roundingUnitsOtherCharges: "0.1",
+            decimalUnits: "2",
+            notes: "5",
+            localCurrencyLimited: false
+          },
+          {
+            country: "India",
+            currencyName: "Indian Rupee",
+            alphaCode: "INR",
+            numericCode: "356",
+            roeFromNUC: "44.328000",
+            roundingUnitsLocalCurrFares: "5",
+            roundingUnitsOtherCharges: "1",
+            decimalUnits: "0",
+            notes: "8, 10",
+            localCurrencyLimited: true
+          },
+          {
+            country: "Canada",
+            currencyName: "Canadian Dollar",
+            alphaCode: "CAD",
+            numericCode: "124",
+            roeFromNUC: "1.177260",
+            roundingUnitsLocalCurrFares: "1",
+            roundingUnitsOtherCharges: "0.1",
+            decimalUnits: "2",
+            notes: "8, 12",
+            localCurrencyLimited: false
+          }
+        ];
+
+        // Notes explanations
+        const notesExplanations = {
+          "1": "For information apply to the nearest office of an issuing or participating airline.",
+          "2": "International fares, fares related charges and excess baggage charges will be quoted in US Dollars. The conversion rate shown herein is to be used solely to convert local currency domestic fares to US Dollars, permitting the combination of domestic fares and international fares on the same ticket.",
+          "5": "Rounding of fares and other charges shall be to the nearest rounding unit.",
+          "8": "Refer to PAT General Rules book section 11.10 for sources for bankers rates of exchange.",
+          "10": "When purchasing a ticket in India, non-residents need prior approval from Reserve Bank or must produce a bank certificate evidencing the exchange of foreign currency.",
+          "12": "(a) Rounding of local currency fares shall be accomplished by dropping amounts less than 50 cents and increasing amounts of 50 cents or more. Round trip fares in Canadian/US currency shall not exceed twice the one-way fare. (b) Other charges - Canadian Tax Charges rounded to the nearest 0.01."
+        };
+
+        // App component
+        const { useState, useEffect } = React;
+        const { Search } = LucideReact;
+
+        const IROESearchApp = () => {
+          const [searchTerm, setSearchTerm] = useState('');
+          const [filteredCountries, setFilteredCountries] = useState([]);
+          const [selectedCountry, setSelectedCountry] = useState(null);
+          const [loading, setLoading] = useState(true);
+
+          // Load data
+          useEffect(() => {
+            setFilteredCountries(iroeData);
+            setLoading(false);
+          }, []);
+
+          // Filter countries based on search term
+          useEffect(() => {
+            if (searchTerm) {
+              const filtered = iroeData.filter(
+                country => 
+                  country.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  country.currencyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  country.alphaCode.toLowerCase().includes(searchTerm.toLowerCase())
+              );
+              setFilteredCountries(filtered);
+            } else {
+              setFilteredCountries(iroeData);
+            }
+          }, [searchTerm]);
+
+          const handleSearch = (e) => {
+            setSearchTerm(e.target.value);
+          };
+
+          const handleSelectCountry = (country) => {
+            setSelectedCountry(country);
+          };
+
+          const formatNote = (note) => {
+            if (!note) return "";
+            
+            return note.split(", ").map(n => {
+              const cleanNote = n.trim();
+              return notesExplanations[cleanNote] || `Note ${cleanNote}`;
+            }).join('\n');
+          };
+
+          return (
+            <div className="max-w-4xl mx-auto p-4 bg-white rounded-lg shadow">
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-center mb-2">IATA Rates of Exchange (IROE) Search</h1>
+                <p className="text-center text-gray-600 mb-4">Find currency exchange rates for international air travel ticketing</p>
+                
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search by country or currency..."
+                    value={searchTerm}
+                    onChange={handleSearch}
+                    className="w-full p-3 border border-gray-300 rounded-lg pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <Search className="absolute left-3 top-3.5 text-gray-400" size={18} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-2 font-semibold mb-2 bg-gray-100 p-2 rounded">
+                <div>Country</div>
+                <div>Currency</div>
+                <div>Code</div>
+                <div>ROE from NUC</div>
+                <div>Actions</div>
+              </div>
+
+              {loading ? (
+                <div className="text-center py-4">Loading IROE data...</div>
+              ) : filteredCountries.length > 0 ? (
+                <div className="max-h-64 overflow-y-auto mb-6">
+                  {filteredCountries.map((country, index) => (
+                    <div 
+                      key={index} 
+                      className={`grid grid-cols-1 md:grid-cols-5 gap-2 p-2 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-blue-50 transition-colors`}
+                    >
+                      <div className="font-medium">
+                        {country.localCurrencyLimited && <span className="text-red-500 mr-1">+</span>}
+                        {country.country}
+                      </div>
+                      <div>{country.currencyName}</div>
+                      <div>{country.alphaCode}</div>
+                      <div>{country.roeFromNUC}</div>
+                      <div>
+                        <button 
+                          onClick={() => handleSelectCountry(country)}
+                          className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
+                        >
+                          View Details
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4 text-gray-500">No results found for "{searchTerm}"</div>
+              )}
+
+              {selectedCountry && (
+                <div className="mt-6 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                  <h2 className="text-xl font-bold mb-4">Currency Details</h2>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h3 className="font-semibold mb-2">Country Information</h3>
+                      <div className="bg-white p-3 rounded border border-gray-200">
+                        <p><span className="font-medium">Country:</span> {selectedCountry.localCurrencyLimited && <span className="text-red-500 mr-1">+</span>}{selectedCountry.country}</p>
+                        <p><span className="font-medium">Currency:</span> {selectedCountry.currencyName}</p>
+                        <p><span className="font-medium">ISO Codes:</span> {selectedCountry.alphaCode} / {selectedCountry.numericCode}</p>
+                        <p><span className="font-medium">ROE from NUC:</span> {selectedCountry.roeFromNUC}</p>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="font-semibold mb-2">Rounding Information</h3>
+                      <div className="bg-white p-3 rounded border border-gray-200">
+                        <p><span className="font-medium">Local Currency Fares:</span> {selectedCountry.roundingUnitsLocalCurrFares}</p>
+                        <p><span className="font-medium">Other Charges:</span> {selectedCountry.roundingUnitsOtherCharges}</p>
+                        <p><span className="font-medium">Decimal Units:</span> {selectedCountry.decimalUnits}</p>
+                        <p><span className="font-medium">Notes:</span> {selectedCountry.notes}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {selectedCountry.notes && (
+                    <div className="mt-4">
+                      <h3 className="font-semibold mb-2">Notes Explanation</h3>
+                      <div className="bg-white p-3 rounded border border-gray-200 text-sm whitespace-pre-line">
+                        {formatNote(selectedCountry.notes)}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-4">
+                    <h3 className="font-semibold mb-2">How to Calculate</h3>
+                    <div className="bg-white p-3 rounded border border-gray-200">
+                      <p className="mb-2">To calculate fares from NUC to {selectedCountry.currencyName}:</p>
+                      <ol className="list-decimal pl-5">
+                        <li>Multiply the NUC amount by the ROE: {selectedCountry.roeFromNUC}</li>
+                        <li>Convert to {selectedCountry.decimalUnits === "0" ? "whole number" : selectedCountry.decimalUnits + " decimal places"}</li>
+                        <li>For fares, round up to the next {selectedCountry.roundingUnitsLocalCurrFares} unit</li>
+                        <li>For other charges, round up to the next {selectedCountry.roundingUnitsOtherCharges} unit</li>
+                      </ol>
+
+                      {selectedCountry.alphaCode === "USD" && selectedCountry.roeFromNUC === "1.000000" && (
+                        <div className="mt-2 text-sm bg-blue-50 p-2 rounded">
+                          <p className="font-medium">Example:</p>
+                          <p>NUC 500.75 × 1.000000 = USD 500.75</p>
+                        </div>
+                      )}
+
+                      {selectedCountry.alphaCode === "INR" && (
+                        <div className="mt-2 text-sm bg-blue-50 p-2 rounded">
+                          <p className="font-medium">Example:</p>
+                          <p>NUC 500.75 × 44.328000 = INR 22,197.23 (rounded to INR 22,200)</p>
+                        </div>
+                      )}
+                      
+                      {selectedCountry.alphaCode === "CAD" && (
+                        <div className="mt-2 text-sm bg-blue-50 p-2 rounded">
+                          <p className="font-medium">Example:</p>
+                          <p>NUC 500.75 × 1.177260 = CAD 589.55 (rounded to CAD 589.60)</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {selectedCountry.localCurrencyLimited && (
+                    <div className="mt-4 bg-yellow-50 p-3 rounded border border-yellow-200">
+                      <p className="text-sm"><span className="font-bold">Note:</span> The "+" symbol indicates that acceptance of this currency is restricted to the country concerned. MCOs for unspecified transportation issued in this currency and totally unused traffic documents paid for in this currency will only be honored in the country of original payment.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        };
+
+        // Render the app
+        ReactDOM.render(<IROESearchApp />, document.getElementById('root'));
+    </script>
 </body>
 </html>
